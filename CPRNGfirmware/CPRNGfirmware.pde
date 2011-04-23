@@ -1,83 +1,81 @@
 #include "sha256.h"
 
-#define BLOCKSIZE 64
 //Global scope variable to track the amount of data recorded so far.
 int blockloc;
 //Global scope variable to store timing data before hashing it
-uint8_t block[BLOCKSIZE];
+uint8_t block[64];
 
-//our test blocks
-uint8_t testone[] = {0xba,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xfa};
+//Set our pin numbers
+int photo = 2;
+int led = 13;
+
+//Global to store the state of the photo-intterupter
+int state = LOW;
+
+//Global variable to tell us if timing has started
+int timestart = false;
+//Global timer variables
+unsigned long timer;
+unsigned long timerval;
                       
-uint8_t testtwo[] = {0xaa,0xba,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xab,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xba,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,0xaa,
-                      0xaa,0xaa,0xaa,0xaa};
-                      
-
-
 void setup() {
+  
+  //initialise globals
   blockloc = 0;
-  for(int i = 0; i < BLOCKSIZE; i++) {
+  for(int i = 0; i < 64; i++) {
     block[i] = 0;
   }
+  
+  //Set pin modes
+  pinMode(photo, INPUT);
+  pinMode(led, OUTPUT);
+ 
+  
+  //Start up serial connection, include a delay to avoid wierd startup issues
   Serial.begin(9600);
-  delay(2000);
-  
-  //Test
-  
-  Serial.println("One:");
-  for(int i = 0; i < BLOCKSIZE; i++){
-    addTimeData(testone[i]);
-  }
-  Serial.println("Two:");
-  for(int i = 0; i < BLOCKSIZE; i++){
-    addTimeData(testone[i]);
-  }
-  Serial.println("Three:");
-  for(int i = 0; i < BLOCKSIZE; i++){
-    addTimeData(testtwo[i]);
-  }
-  Serial.println("Four:");
-  for(int i = 0; i < BLOCKSIZE; i++){
-    addTimeData(testtwo[i]);
-  }
+  delay(5000);
   
 }
 
 void loop() {
-
+  if( digitalRead(photo) != state ) {
+    if (timestart) {
+      timerval = 0;
+      timerval = micros() - timer;
+      for(int i = 0; i <4; i++) {
+        addTimeData(lowByte(timerval));
+        timerval = timerval >> 8;
+      }
+      timestart = false;
+    }
+    state = !state;
+  }
+  if (!timestart) {
+    timer = micros();
+    timestart = true;
+  }
 }
 
 void addTimeData(uint8_t data) {
-  if (blockloc < BLOCKSIZE){
+  if (blockloc < 64){
     block[blockloc] = data;
     blockloc++;
   }
-  if(blockloc == BLOCKSIZE) {
+  if(blockloc == 64) {
     hashAndPrint();
-    blockloc = 0;
-    for(int i = 0; i < BLOCKSIZE; i++){
-      block[i] = 0;
-    }
   }
 }
 
 void hashAndPrint() {
  Sha256.init();
- for(int i = 0; i < BLOCKSIZE; i++) {
+ for(int i = 0; i <= 64; i++) {
    Sha256.print(block[i]);
  } 
  printHash(Sha256.result());
+ blockloc = 0;
+ for(int i = 0; i <= 64; i++){
+   block[i] = 0;
+ }
 }
 
 void printHash(uint8_t* hash) {
@@ -87,5 +85,6 @@ void printHash(uint8_t* hash) {
     Serial.print("0123456789abcdef"[hash[i]&0xf]);
   }
   Serial.println();
-  delay(1000);
+  delay(2000);
 }
+
