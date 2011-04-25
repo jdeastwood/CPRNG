@@ -1,9 +1,11 @@
 #include "sha256.h"
 
+#define BLOCKSIZE 64
+
 //Global scope variable to track the amount of data recorded so far.
 int blockloc;
 //Global scope variable to store timing data before hashing it
-uint8_t block[64];
+uint8_t block[BLOCKSIZE];
 
 //Set our pin numbers
 int photo = 2;
@@ -22,7 +24,7 @@ void setup() {
   
   //initialise globals
   blockloc = 0;
-  for(int i = 0; i < 64; i++) {
+  for(int i = 0; i < BLOCKSIZE; i++) {
     block[i] = 0;
   }
   
@@ -57,23 +59,23 @@ void loop() {
 }
 
 void addTimeData(uint8_t data) {
-  if (blockloc < 64){
+  if (blockloc < BLOCKSIZE){
     block[blockloc] = data;
     blockloc++;
   }
-  if(blockloc == 64) {
+  if(blockloc == BLOCKSIZE) {
     hashAndPrint();
   }
 }
 
 void hashAndPrint() {
  Sha256.init();
- for(int i = 0; i <= 64; i++) {
+ for(int i = 0; i <= BLOCKSIZE; i++) {
    Sha256.print(block[i]);
  } 
  printHash(Sha256.result());
  blockloc = 0;
- for(int i = 0; i <= 64; i++){
+ for(int i = 0; i <= BLOCKSIZE; i++){
    block[i] = 0;
  }
 }
