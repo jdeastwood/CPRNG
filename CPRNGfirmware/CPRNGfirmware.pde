@@ -83,9 +83,7 @@ void hashAndPrint() {
 void printHash(uint8_t* hash) {
   int i;
   for (i=0; i<32; i++) {
-    Serial.print("0123456789abcdef"[hash[i]>>4]);
-    Serial.print("0123456789abcdef"[hash[i]&0xf]);
+    Serial.print(hash[i]);
   }
-  Serial.println();
   delay(1000);
 }
