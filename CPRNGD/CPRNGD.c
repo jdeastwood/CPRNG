@@ -5,13 +5,22 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
-#include <linux/random.h>
 #include <sys/ioctl.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <syslog.h>
+#include <linux/random.h>
 
 #define BAUDRATE B9600
 #define DEVICE "/dev/ttyACM2"
 
+void daemonize();
+
 int main() {
+	daemonize();
+
+	//TODO: check that we are root.
+	
 	char reply[6];
 	int fd, devrand, rd = 1;
 	struct termios tio, oldtio;
@@ -26,7 +35,7 @@ int main() {
 		printf("open...");
 		while (rd) {
 			rd =read(fd, reply, 6);
-			for (int i=0; i < 6; i++) {
+			for (int i=0; i < rd; i++) {
 				rand.buf[i] = reply[i];
 			}			
 			ioctl(devrand, RNDADDENTROPY, &rand);
@@ -37,5 +46,37 @@ int main() {
 	else {
 		printf("fail");	
 	}
+
+}
+
+void daemonize() {
+	pid_t pid, sid;
+	
+	pid = fork();
+	if (pid < 0) {
+		exit(EXIT_FAILURE);
+	}
+	if (pid > 0) {
+		exit(EXIT_SUCCESS);	
+	}
+	
+	umask(0);
+
+	/*TODO: open some logs here*/
+
+	sid = setsid();
+	if (sid < 0) {
+		//log!
+		exit(EXIT_FAILURE);
+	}
+
+	if ((chdir("/")) < 0) {
+		//log!		
+		exit(EXIT_FAILURE);
+	}
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 
 }
