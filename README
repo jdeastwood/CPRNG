@@ -1,5 +1,33 @@
-This is is the Arduino firmware to drive the Wentworth Institute Of Technology SEC project Chaotic Pendulum Random Number Generator.
-
 The CPRNG is a novelty hardware random number generator based on the movement of a chaotic pendulum as observed by a photo-interrupter. 
 
+**CPRNGfirmware**
+This directory contains the Arduino firmware to drive the Wentworth Institute Of Technology SEC project Chaotic Pendulum Random Number Generator.
+
 The Arduino firmware requires the Cryptosuite library by Cathedrow. Available from: https://github.com/Cathedrow/Cryptosuite
+
+**CPRNGUI**
+
+This directory contains a PHP script for demonstrating one use of the output
+of /dev/random.
+
+**CPRNGD**
+
+This directory contains a linux daemon that reads from /ttyACM0 (you'll have to recompile if you want to change that.. sorry) and inserts entropy into /dev/random.
+
+*******************************************
+**************VERSION HISTORY**************
+*******************************************
+
+**v1.1**
+Includes the first working prototype of the CPRNG Daemon. (whic doesn't work
+as a daeomon yet).
+Also adds a small example PHP script that reads from /dev/random to give a 
+nice GUI for demonstrating the output of the CPRNG.
+
+**v1.0**
+First version of the firmware that works with the pendulum. Output is in nicelly formatted hex, which isn't good for randomness!
+
+**v0.5**
+
+Implements the hashing functions. NO reading from the pendulum yet. Usefull
+for debbugging. 
